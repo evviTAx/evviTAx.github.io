@@ -3,103 +3,276 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZHOU YAOXUAN | Game Art & Technical Art Portfolio</title>
+  <title>TSUBASA | Portfolio</title>
+  <!-- 引入 PDF.js 核心库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      user-select: none; /* 防止误选中文本 */
+      -webkit-user-select: none;
     }
     body {
-      background-color: #121316; /* 低饱和暗色背景，无缝衔接你的作品集色调 */
-      color: #e2e4e9;
+      background-color: #111215; /* 低饱和暗色背景 */
+      color: #d4d7e0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
       overflow: hidden;
     }
-    /* 顶部极简导航栏 */
-    header {
-      height: 48px;
-      padding: 0 24px;
-      background-color: #181a1f;
-      border-bottom: 1px solid #282b33;
+
+    /* 顶部极简信息栏 */
+    .header-info {
+      position: absolute;
+      top: 24px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
+      gap: 16px;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      color: #7c8292;
     }
-    .title {
-      font-size: 14px;
-      letter-spacing: 0.08em;
-      color: #b8bcc8;
+    .header-info strong {
+      color: #c8ccd6;
+      font-weight: 500;
     }
-    .title strong {
-      color: #f0f2f5;
-      font-weight: 600;
-    }
-    .actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .btn {
-      text-decoration: none;
-      font-size: 12px;
-      padding: 6px 14px;
-      border-radius: 4px;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-    .btn-outline {
-      color: #c5c9d4;
-      border: 1px solid #383c47;
-      background: transparent;
-    }
-    .btn-outline:hover {
-      border-color: #6b7285;
-      color: #ffffff;
-    }
-    .btn-primary {
-      color: #121316;
-      background-color: #d8dce6;
-      font-weight: 600;
-    }
-    .btn-primary:hover {
-      background-color: #ffffff;
-    }
-    /* PDF 全屏容器 */
-    main {
-      flex: 1;
-      width: 100%;
-      height: calc(100vh - 48px);
+
+    /* 屏幕中央 16:9 展示容器 */
+    .viewer-wrapper {
       position: relative;
+      width: 78vw;              /* 占据屏幕宽度的 78%，四周留出呼吸感 */
+      max-width: 1280px;
+      aspect-ratio: 16 / 9;     /* 严格锁定 16:9 比例 */
+      max-height: 76vh;
+      background-color: #181a1f;
+      border: 1px solid #262932;
+      border-radius: 6px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
-    iframe {
+
+    /* 渲染画布与交互热区层 */
+    #pdf-canvas {
       width: 100%;
       height: 100%;
-      border: none;
       display: block;
+      object-fit: contain;
+    }
+    #annotation-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    #annotation-layer a {
+      position: absolute;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    /* 左右切换按钮 */
+    .nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(24, 26, 31, 0.75);
+      border: 1px solid #323642;
+      color: #d4d7e0;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 10;
+      backdrop-filter: blur(4px);
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: rgba(45, 49, 60, 0.95);
+      border-color: #5c6378;
+      color: #ffffff;
+    }
+    .nav-btn:disabled {
+      opacity: 0.2;
+      cursor: default;
+    }
+    .nav-prev { left: 16px; }
+    .nav-next { right: 16px; }
+
+    /* 底部页码指示器 */
+    .footer-controls {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+      color: #7c8292;
+      letter-spacing: 0.08em;
+    }
+    .loading-tip {
+      position: absolute;
+      font-size: 13px;
+      color: #6c7282;
+      letter-spacing: 0.05em;
+    }
+
+    @media (max-width: 768px) {
+      .viewer-wrapper { width: 92vw; }
+      .nav-btn { width: 36px; height: 36px; font-size: 14px; }
     }
   </style>
 </head>
-<body>
+<body oncontextmenu="return false;"> <!-- 禁用全局右键菜单 -->
 
-  <header>
-    <div class="title"><strong>TSUBASA</strong>  |  PORTFOLIO 2026</div>
-    <div class="actions">
-      <!-- 方便 HR 或手机端用户在新窗口全屏打开 -->
-      <a href="./Glimravel.pdf" target="_blank" class="btn btn-outline">別タブで開く</a>
-      <!-- 一键下载到本地，方便 HR 转发给主美/TA面试官 -->
-      <a href="./Glimravel.pdf" download="Tsubasa_Portfolio_2026.pdf" class="btn btn-primary">PDFダウンロード</a>
-    </div>
-  </header>
+  <div class="header-info">
+    <strong>TSUBASA</strong>
+    <span>|</span>
+    <span>PORTFOLIO</span>
+  </div>
 
-  <main>
-    <!-- #view=Fit 确保 16:9 宽屏页面默认完整自适应窗口显示 -->
-    <iframe src="./Glimravel.pdf#view=Fit" title="Tsubasa Portfolio"></iframe>
-  </main>
+  <div class="viewer-wrapper" id="viewer-container">
+    <div class="loading-tip" id="loading-tip">Loading Portfolio...</div>
+    <canvas id="pdf-canvas"></canvas>
+    <!-- 保留 Figma 交互链接层 -->
+    <div id="annotation-layer"></div>
 
+    <button class="nav-btn nav-prev" id="prev-btn" aria-label="Previous">❮</button>
+    <button class="nav-btn nav-next" id="next-btn" aria-label="Next">❯</button>
+  </div>
+
+  <div class="footer-controls">
+    <span id="page-indicator">- / -</span>
+  </div>
+
+  <script>
+    const pdfUrl = './Glimravel.pdf'; // 你的 PDF 文件路径
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    let isRendering = false;
+    let pendingPage = null;
+
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+    const annotationLayer = document.getElementById('annotation-layer');
+    const loadingTip = document.getElementById('loading-tip');
+    const pageIndicator = document.getElementById('page-indicator');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    // 禁用常见保存/打印快捷键 (Ctrl+S / Cmd+S / Ctrl+P / Cmd+P)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'p')) {
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowLeft') changePage(-1);
+      if (e.key === 'ArrowRight') changePage(1);
+    });
+
+    // 渲染指定页码（按 2 倍像素比渲染以保证 Retina 屏高清锐利）
+    async function renderPage(num) {
+      isRendering = true;
+      const page = await pdfDoc.getPage(num);
+      const container = document.getElementById('viewer-container');
+      const unscaledViewport = page.getViewport({ scale: 1 });
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const scale = (container.clientWidth / unscaledViewport.width) * dpr;
+      const viewport = page.getViewport({ scale });
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      loadingTip.style.display = 'none';
+
+      // 解析并渲染 Figma 导出的交互式页内跳转链接
+      annotationLayer.innerHTML = '';
+      const annotations = await page.getAnnotations();
+      const displayScale = container.clientWidth / unscaledViewport.width;
+      annotations.forEach(ann => {
+        if (ann.subtype === 'Link' && (ann.dest || ann.url)) {
+          const [x1, y1, x2, y2] = ann.rect;
+          const link = document.createElement('a');
+          link.style.left = `${x1 * displayScale}px`;
+          link.style.bottom = `${y1 * displayScale}px`;
+          link.style.width = `${(x2 - x1) * displayScale}px`;
+          link.style.height = `${(y2 - y1) * displayScale}px`;
+          link.onclick = async (e) => {
+            e.preventDefault();
+            if (ann.url) {
+              window.open(ann.url, '_blank', 'noopener');
+            } else if (ann.dest) {
+              const destArray = typeof ann.dest === 'string' ? await pdfDoc.getDestination(ann.dest) : ann.dest;
+              if (destArray) {
+                const pageIndex = await pdfDoc.getPageIndex(destArray[0]);
+                queueRenderPage(pageIndex + 1);
+              }
+            }
+          };
+          annotationLayer.appendChild(link);
+        }
+      });
+
+      currentPage = num;
+      pageIndicator.textContent = `${currentPage} / ${pdfDoc.numPages}`;
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= pdfDoc.numPages;
+
+      isRendering = false;
+      if (pendingPage !== null) {
+        const next = pendingPage;
+        pendingPage = null;
+        renderPage(next);
+      }
+    }
+
+    function queueRenderPage(num) {
+      if (num < 1 || num > pdfDoc.numPages) return;
+      if (isRendering) {
+        pendingPage = num;
+      } else {
+        renderPage(num);
+      }
+    }
+
+    function changePage(delta) {
+      queueRenderPage(currentPage + delta);
+    }
+
+    prevBtn.addEventListener('click', () => changePage(-1));
+    nextBtn.addEventListener('click', () => changePage(1));
+
+    // 支持触控板 / 手机屏幕左右滑动手势翻页
+    let touchStartX = 0;
+    const viewer = document.getElementById('viewer-container');
+    viewer.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    viewer.addEventListener('touchend', (e) => {
+      const diff = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(diff) > 40) changePage(diff < 0 ? 1 : -1);
+    }, { passive: true });
+
+    // 窗口缩放时自适应重绘
+    window.addEventListener('resize', () => {
+      if (pdfDoc) queueRenderPage(currentPage);
+    });
+
+    // 加载 PDF
+    pdfjsLib.getDocument(pdfUrl).promise.then(doc => {
+      pdfDoc = doc;
+      renderPage(1);
+    });
+  </script>
 </body>
 </html>
