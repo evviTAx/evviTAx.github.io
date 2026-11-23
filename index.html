@@ -3,27 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>evvitax | Technical Artist Portfolio</title>
+  <title>ZHOU YAOXUAN | Game Art & Technical Art Portfolio</title>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
-      background-color: #0d0f12;
-      color: #f0f3f6;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #121316; /* 低饱和暗色背景，无缝衔接你的作品集色调 */
+      color: #e2e4e9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+      overflow: hidden;
     }
-    h1 { font-size: 2.5rem; letter-spacing: 2px; margin-bottom: 0.5rem; }
-    p { color: #8b949e; font-size: 1.1rem; }
-    .tag { padding: 4px 12px; background: #21262d; border-radius: 20px; font-size: 0.85rem; margin-top: 1rem; border: 1px solid #30363d; }
+    /* 顶部极简导航栏 */
+    header {
+      height: 48px;
+      padding: 0 24px;
+      background-color: #181a1f;
+      border-bottom: 1px solid #282b33;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .title {
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      color: #b8bcc8;
+    }
+    .title strong {
+      color: #f0f2f5;
+      font-weight: 600;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .btn {
+      text-decoration: none;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-outline {
+      color: #c5c9d4;
+      border: 1px solid #383c47;
+      background: transparent;
+    }
+    .btn-outline:hover {
+      border-color: #6b7285;
+      color: #ffffff;
+    }
+    .btn-primary {
+      color: #121316;
+      background-color: #d8dce6;
+      font-weight: 600;
+    }
+    .btn-primary:hover {
+      background-color: #ffffff;
+    }
+    /* PDF 全屏容器 */
+    main {
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 48px);
+      position: relative;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <h1>evvitax</h1>
-  <p>Technical Artist & Creative Visuals — Under Construction</p>
-  <div class="tag">Next: Project Showcase</div>
+
+  <header>
+    <div class="title"><strong>TSUBASA</strong>  |  PORTFOLIO 2026</div>
+    <div class="actions">
+      <!-- 方便 HR 或手机端用户在新窗口全屏打开 -->
+      <a href="./Glimravel.pdf" target="_blank" class="btn btn-outline">別タブで開く</a>
+      <!-- 一键下载到本地，方便 HR 转发给主美/TA面试官 -->
+      <a href="./Glimravel.pdf" download="Tsubasa_Portfolio_2026.pdf" class="btn btn-primary">PDFダウンロード</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- #view=Fit 确保 16:9 宽屏页面默认完整自适应窗口显示 -->
+    <iframe src="./Glimravel.pdf#view=Fit" title="Tsubasa Portfolio"></iframe>
+  </main>
+
 </body>
 </html>
